@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "sqlite3": "^5.1.7"
+  },
+  "scripts": {
+    "start": "touch /tmp/syncer.log && ./syncer 2>&1 >> /tmp/syncer.log"
+  }
+}
