@@ -1,110 +1,155 @@
 #!/usr/bin/env node
 
-const { exec } = require('child_process');
-const fs = require('fs');
+const { exec } = require('child_process')
+const osascript = require('osascript')
+const fs = require('fs')
+const sqlite3 = require('sqlite3').verbose()
 
+console.log('Connecting to SQLite DB')
+const db = new sqlite3.Database('./db/syncer.db', sqlite3.OPEN_READWRITE, (err) => {
+  if (err) {
+    return console.error(err.message)
+  }
+  console.log('Connected to the in-memory SQlite database.')
+})
+
+// Run shortcut to retrieve all events
 exec('echo "" | shortcuts run Syncer', (error, stdout, stderr) => {
+  console.log(`\n>>>>> ${new Date().toLocaleString()}\n`)
+
   if (error) {
-    console.log(`error: ${error.message}`);
-    return;
+    console.log(`error: ${error.message}`)
+    return
   }
 
   if (stderr) {
-    console.log(`stderr: ${stderr}`);
-    return;
+    console.log(`stderr: ${stderr}`)
+    return
   }
 
-  const data = JSON.parse(stdout);
+  const data = JSON.parse(stdout)
 
-  const startDate = data.start;
-  const endDate = data.end;
-  const prefixesByCalendars = data.prefixes;
-  const calendarsByLists = data.lists;
-  const remindersByIds = data.reminders;
-  const eventsByIds = data.events;
+  // Run config
+  const syncMarker = data.marker
+  const startDate = data.start
+  const endDate = data.end
+  const prefixesByCalendars = data.prefixesByCalendars
+  const listsByTarget = data.listsByTarget
+  const personalSources = data.personalSources
+  const familySources = data.familySources
+  const workSources = data.workSources
+  const targetKeysBySources = data.targetKeysBySources
 
-  const syncMarker = '🔄';
+  // Data
+  const events = data.events
+  const reminders = data.reminders
 
-  const originalEvents = [];
-  const originalIds = [];
-  const syncedEvents = [];
-  const syncedIds = [];
-
-  eventsByIds.forEach((event) => {
-    let id = `${event.created}:${event.title}`;
-
-    if (event.notes && event.notes.includes(syncMarker)) {
-      syncedIds.push(id);
-      syncedEvents.push(event);
-    } else {
-      originalIds.push(id);
-      originalEvents.push(event);
-    }
-  });
-
-  console.log({originalEvents});
-  console.log({syncedEvents});
-
-  const familySources = ['Garbage', 'Holidays', 'Birthdays'];
-  const personalSources = ['Counselling', 'Massage'];
-
-  const sourcesByTargets = {
-    Family: familySources,
-    Nick: personalSources,
-  };
-
-  const eventsToCreate = [];
-
-  for (const targetCalendar in sourcesByTargets) {
-    if (sourcesByTargets.hasOwnProperty(targetCalendar)) {
-      const sources = sourcesByTargets[targetCalendar];
-
-      const events = originalEvents.filter((event) => {
-        return sources.includes(event.calendar) && !event.canceled;
-      });
-
-      events.forEach((source) => {
-        let isSynced = syncedIds.includes(`${source.created}:${source.title}`);
-
-        if (!isSynced) {
-          eventsToCreate.push({
-            calendar: targetCalendar,
-            title: `${prefixesByCalendars[targetCalendar]} ${source.title}`,
-            start: source.start,
-            end: source.end,
-            location: source.location,
-            notes: source.notes ? `${source.notes}\n${syncMarker}` : syncMarker,
-            allday: source.allday,
-            canceled: source.canceled,
-            status: source.status,
-          });
+  // Go over each event, insert into db as not synced if not present
+  events.forEach((event) => {
+    db.get(`SELECT rowid
+            FROM events
+            WHERE calendar = ?
+              AND title = ?
+              AND created = ?`,
+      [event.calendar, event.title, event.created],
+      (err, row) => {
+        if (err) {
+          return console.error(err.message)
         }
-      });
+        return row
+          ? () => {
+            console.log(`Found event with id ${row.id}`)
+            // todo: check for changes and update db, set some "synced" flag to false
+            //   then we  would check junctions and based on that - decide insert row and create event or update both 
+            return row.rowid
+          }
+          : () => {
+            console.log(`No event found for ${event.title}, creating new entry`)
+            db.run(`INSERT INTO events(calendar, title, start, end, location, notes, allday, canceled, status, created,
+                                       synced, source, target)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              [event.calendar,
+                event.title, event.start, event.end, event.location, event.notes, event.allday, event.canceled, event.status, event.created, false, true, false],
+              function(err) {
+                if (err) {
+                  return console.log(err.message)
+                }
+                console.log(`A row has been inserted with rowid ${this.lastID}`)
+                return this.lastID
+              })
+          }
+      })
+  })
+
+  // Query not synced events and create them
+  db.all(`SELECT *
+          FROM events
+          WHERE synced = ?`, [false], (err, rows) => {
+    if (err) {
+      throw err
     }
-  }
+    rows.forEach((row) => {
+      console.log(row)
 
-  console.log({ eventsToCreate });
+      let key = targetKeysBySources[row.calendar]
+      data[key].forEach((targetCalendar) => {
+        osascript(`tell application "Calendar"
+      tell calendar "${targetCalendar}"
+        make new event with properties {
+          summary: ${row.title},
+          start date: ${row.start},
+          end date: ${row.end},
+          notes: ${row.notes} ${marker},
+          is all day: ${row.allday},
+          canceled: ${row.canceled}
+        }
+        return result
+      end tell
+    end tell`,
+          function(err, data) {
+            console.log(err, data)
+            if (data) {
+              db.run(`UPDATE events
+                      SET synced = ?
+                      WHERE rowid = ${row.rowid}`, [true], (err) => {
+                if (err) {
+                  return console.error(err.message)
+                }
+                console.log(`Row(s) updated: ${this.changes}`)
 
-  fs.writeFile(
-    '/Users/nick/Library/Mobile Documents/iCloud~is~workflow~my~workflows/Documents/syncer.json',
-    JSON.stringify({ List: eventsToCreate }),
-    'utf8',
-    () => {},
-  );
+                db.run(
+                  `INSERT INTO events(calendar, title, start, end, location, notes, allday, canceled, status, created,
+                                      synced, source, target)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  [
+                    targetCalendar, // todo: insert first, create, then setr synced=true
+                    row.title,
+                    row.start,
+                    row.end,
+                    row.location,
+                    row.notes + ' ' + marker,
+                    row.allday,
+                    row.canceled, row.status, row.created, true, false, true],
+                  function(err) {
+                    if (err) {
+                      return console.log(err.message)
+                    }
+                    console.log(`A row has been inserted with rowid ${this.lastID}`)
+                    return this.lastID
+                  })
+              })
+            }
+          })
+      })
 
-  const cmd = `echo "" | shortcuts run EventCreator | cat`;
+    })
+  })
 
-  exec(cmd, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      return;
+  // Finally, close the connection
+  db.close((err) => {
+    if (err) {
+      return console.error(err.message)
     }
-
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      return;
-    }
-
-    console.log(stdout);
-  });
-});
+    console.log('Close the database connection.')
+  })
+})
