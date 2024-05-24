@@ -1,31 +1,33 @@
 module.exports = {
   dateRange: {
-    startOffset: -1 * 7 * 24 * 60 * 60 * 1000, // Subtract 1 week
-    endOffset: 2 * 7 * 24 * 60 * 60 * 1000, // Add 2 weeks
+    // Weeks * Days * Hours * Minutes * Seconds * Milliseconds
+    startOffset: -1 * 1 * 24 * 60 * 60 * 1000, // Subtract 1 day
+    endOffset: 1 * 1 * 24 * 60 * 60 * 1000, // Add 1 day
   },
   emojiPrefixesByCalendars: {
-    Birthdays: '🎂',
-    'Canadian Holidays': '🇨🇦',
-    Garbage: '🗑',
-    Counselling: '🧠',
-    Massage: '💆‍♂️',
-    Nick: '💪',
-    Maria: '🎨',
-    Family: '👨‍👩‍👧‍👦',
-    Calendar: '📅',
+    Birthdays: '🎂 ',
+    'Canadian Holidays': '🇨🇦 ',
+    Garbage: '🚛 ',
+    Counselling: '🧠 ',
+    Massage: '💪 ',
+    Nick: '⭐ ',
+    Maria: '⭐ ',
+    Family: '🎈 ',
+    Calendar: '🖥 ',
+    Corrao: '🖥 ',
   },
   listsByTarget: {
-    Nick: ['list1', 'list2'],
-    Family: ['list3', 'list4'],
+    Nick: ['Ideas', 'Projects', 'Software', 'Health', 'Work'],
+    Family: ['Groceries', 'Home', 'Shopping', 'Renovations'],
   },
   sources: {
-    personalSources: ['source1', 'source2'],
-    familySources: ['source3', 'source4', 'source5'],
-    workSources: ['source6', 'source7'],
+    personalSources: ['Nick', 'Counselling', 'Massage'],
+    familySources: ['Family', 'Garbage'],
+    workSources: ['Calendar', 'Corrao'],
   },
   targetKeysBySources: {
-    source1: ['targetCalendar1'],
-    source2: ['targetCalendar2'],
-    // Add more mappings as needed
+    personalSources: ['Nick'],
+    familySources: ['Family'],
+    workSources: ['Nick'],
   },
 };

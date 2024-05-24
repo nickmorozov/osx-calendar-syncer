@@ -1,5 +1,4 @@
 const osascript = require('osascript');
-const { connectDB } = require('./db');
 
 /**
  * Finds events/reminders not in the database.
@@ -10,10 +9,11 @@ function findEvents(date) {
   return new Promise((resolve, reject) => {
     osascript(
       `
-            tell application "Calendar"
-                set eventsList to (get properties of (every event where start date is in {${date}}))
-            end tell
-            return eventsList
+        log "Finding events on date: " & ${date}
+        tell application "Calendar"
+          set eventsList to (get properties of (every event where start date is in {${date}}))
+        end tell
+        return eventsList
         `,
       (err, result) => {
         if (err) {
@@ -29,10 +29,11 @@ function findReminders(date) {
   return new Promise((resolve, reject) => {
     osascript(
       `
-            tell application "Reminders"
-                set remindersList to (get properties of (every reminder where due date is in {${date}}))
-            end tell
-            return remindersList
+        log "Finding reminders on date: " & ${date}
+        tell application "Reminders"
+          set remindersList to (get properties of (every reminder where due date is in {${date}}))
+        end tell
+        return remindersList
         `,
       (err, result) => {
         if (err) {
