@@ -4,8 +4,9 @@
   "description": "A project to sync events and reminders using osascript and SQLite.",
   "main": "src/main.js",
   "dependencies": {
-    "osascript": "^1.2.0",
-    "sqlite3": "^5.1.7"
+    "dotenv": "latest",
+    "osascript": "latest",
+    "sqlite3": "latest"
   },
   "scripts": {
     "lint": "eslint src",

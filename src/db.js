@@ -1,7 +1,8 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+require('dotenv').config();
 
-const dbPath = path.resolve(__dirname, './db/syncer.db');
+const dbPath = process.env.DATABASE_PATH || path.resolve(__dirname, '../db/syncer.db');
 let db;
 
 function connectDB() {

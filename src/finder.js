@@ -8,7 +8,7 @@ const { connectDB } = require('./db');
  */
 function findEvents(date) {
   return new Promise((resolve, reject) => {
-    osascript.execute(
+    osascript(
       `
             tell application "Calendar"
                 set eventsList to (get properties of (every event where start date is in {${date}}))
@@ -27,7 +27,7 @@ function findEvents(date) {
 
 function findReminders(date) {
   return new Promise((resolve, reject) => {
-    osascript.execute(
+    osascript(
       `
             tell application "Reminders"
                 set remindersList to (get properties of (every reminder where due date is in {${date}}))
