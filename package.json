@@ -6,6 +6,7 @@
   "dependencies": {
     "dotenv": "latest",
     "osascript": "latest",
+    "process": "latest",
     "sqlite3": "latest"
   },
   "scripts": {
