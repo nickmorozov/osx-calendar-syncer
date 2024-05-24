@@ -1,14 +1,13 @@
 {
   "env": {
-    "browser": true,
-    "es6": true,
-    "node": true
+    "node": true,
+    "es6": true
   },
   "plugins": [
     "prettier"
   ],
   "extends": [
-    "prettier",
+    "eslint:recommended",
     "plugin:prettier/recommended"
   ],
   "globals": {
@@ -33,14 +32,16 @@
     "prettier/prettier": [
       "error",
       {
-        "usePrettierrc": false,
-        "trailingComma": "es5",
-        "tabWidth": 4,
+        "printWidth": 180,
+        "tabWidth": 2,
+        "useTabs": false,
+        "semi": true,
         "singleQuote": true,
-        "printWidth": 100,
+        "trailingComma": "es5",
+        "bracketSpacing": true,
+        "arrowParens": "always",
         "embeddedLanguageFormatting": "auto",
-        "endOfLine": "lf",
-        "apexInsertFinalNewline": false
+        "endOfLine": "lf"
       }
     ]
   },

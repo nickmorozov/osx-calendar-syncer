@@ -1,6 +1,0 @@
-trailingComma: 'es5' # Print trailing commas wherever possible when multi-line
-tabWidth: 4 # The number of spaces per indentation-level
-singleQuote: true # Unified usage of single quotes across all languages (where possible)
-printWidth: 100
-embeddedLanguageFormatting: auto
-endOfLine: lf
