@@ -10,8 +10,9 @@
   },
   "scripts": {
     "lint": "eslint src",
-    "build": "touch syncer.log && node src/init.js 2>&1 >> syncer.log",
-    "start": "touch syncer.log && node src/main.js 2>&1 >> syncer.log",
+    "prebuild": "touch syncer.log && chmod 666 syncer.log",
+    "build": "node src/init.js",
+    "start": "node src/main.js",
     "prettier": "prettier --write 'src/**/*.{js,ts,json}'",
     "prettier:verify": "prettier --list-different 'src/**/*.{js,ts,json}'",
     "postinstall": "husky install",
