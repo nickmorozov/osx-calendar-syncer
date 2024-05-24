@@ -1,0 +1,48 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true
+  },
+  "plugins": [
+    "prettier"
+  ],
+  "extends": [
+    "prettier",
+    "plugin:prettier/recommended"
+  ],
+  "globals": {
+    // "$A": "readonly"
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    "dist/",
+    ".idea/"
+  ],
+  "noInlineConfig": false,
+  "overrides": [],
+  "parser": "",
+  "parserOptions": {
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "root": false,
+  "rules": {
+    "semi": "error",
+    "prefer-const": "error",
+    "prettier/prettier": [
+      "error",
+      {
+        "usePrettierrc": false,
+        "trailingComma": "es5",
+        "tabWidth": 4,
+        "singleQuote": true,
+        "printWidth": 100,
+        "embeddedLanguageFormatting": "auto",
+        "endOfLine": "lf",
+        "apexInsertFinalNewline": false
+      }
+    ]
+  },
+  "settings": {}
+}
