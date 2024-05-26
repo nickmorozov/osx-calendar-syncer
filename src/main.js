@@ -56,3 +56,5 @@ async function main() {
 main()
   .then(() => logger.log('Syncer exiting...'))
   .catch((reason) => logger.error(reason));
+
+module.exports = main;

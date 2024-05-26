@@ -1,4 +1,4 @@
-const { connectDB } = require('../src/db');
+const { connectDB, closeDB } = require('../src/db');
 const sqlite3 = require('sqlite3').verbose();
 
 describe('Database Module', () => {
@@ -25,6 +25,7 @@ describe('Database Module', () => {
   });
 
   test('should close the database connection', () => {
+    db = connectDB(); // Reconnect the DB to ensure it's open
     return new Promise((resolve, reject) => {
       db.close((err) => {
         expect(err).toBeNull(); // Add assertion

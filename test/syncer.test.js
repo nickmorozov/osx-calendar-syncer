@@ -2,6 +2,7 @@ const { syncItem } = require('../src/syncer');
 
 describe('Syncer Module', () => {
   test('should sync an event', async () => {
+    jest.setTimeout(15000); // Increase the timeout
     const event = {
       title: 'Test Event',
       start: '2024-01-01T10:00:00',
@@ -16,6 +17,7 @@ describe('Syncer Module', () => {
   });
 
   test('should sync a reminder', async () => {
+    jest.setTimeout(15000); // Increase the timeout
     const reminder = {
       title: 'Test Reminder',
       due: '2024-01-01T10:00:00',

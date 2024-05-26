@@ -15,14 +15,16 @@
     "build": "node src/init.js",
     "start": "node src/main.js",
     "test": "jest",
-    "prettier": "prettier --write 'src/**/*.{js,ts,json}'",
-    "prettier:verify": "prettier --list-different 'src/**/*.{js,ts,json}'",
+    "prettier": "prettier --write 'src/**/*.{js,ts,jsx,tsx,html,vue}'",
+    "prettier:verify": "prettier --list-different 'src/**/*.{js,ts,jsx,tsx,html,vue}'",
     "postinstall": "husky install",
     "precommit": "lint-staged"
   },
   "lint-staged": {
-    "**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}": [
-      "prettier --write"
+    "**/*.{js,ts,jsx,tsx,html,vue}": [
+      "prettier --write",
+      "npm run lint",
+      "npm run test"
     ]
   },
   "devDependencies": {

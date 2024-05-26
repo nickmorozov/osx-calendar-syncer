@@ -1,4 +1,4 @@
-const init = require('../src/init');
+const main = require('../src/main');
 const { connectDB, closeDB } = require('../src/db');
 const logger = require('../src/logger');
 
@@ -10,17 +10,17 @@ describe('Main Script', () => {
     jest.clearAllMocks();
   });
 
-  test('should initialize the database successfully', async () => {
+  test('should run the main script successfully', async () => {
     connectDB.mockReturnValue({});
     closeDB.mockImplementation(() => {});
 
-    await init();
+    await main();
 
     expect(connectDB).toHaveBeenCalledTimes(1);
     expect(closeDB).toHaveBeenCalledTimes(1);
-    expect(logger.log).toHaveBeenCalledWith('Initializing database...');
-    expect(logger.log).toHaveBeenCalledWith('Database initialized.');
-    expect(logger.log).toHaveBeenCalledWith('Initialization finished.');
+    expect(logger.log).toHaveBeenCalledWith('Starting syncer...');
+    expect(logger.log).toHaveBeenCalledWith(expect.stringContaining('Fetching events and reminders'));
+    expect(logger.log).toHaveBeenCalledWith('Syncer finished.');
   });
 
   test('should handle errors during database initialization', async () => {
@@ -29,12 +29,12 @@ describe('Main Script', () => {
     });
     closeDB.mockImplementation(() => {});
 
-    await init();
+    await expect(main()).rejects.toThrow('Initialization error');
 
     expect(connectDB).toHaveBeenCalledTimes(1);
     expect(closeDB).toHaveBeenCalledTimes(1);
-    expect(logger.log).toHaveBeenCalledWith('Initializing database...');
-    expect(logger.error).toHaveBeenCalledWith('Error initializing database: Initialization error');
-    expect(logger.log).toHaveBeenCalledWith('Initialization finished.');
+    expect(logger.log).toHaveBeenCalledWith('Starting syncer...');
+    expect(logger.error).toHaveBeenCalledWith('Error during sync process: Initialization error');
+    expect(logger.log).toHaveBeenCalledWith('Syncer finished.');
   });
 });

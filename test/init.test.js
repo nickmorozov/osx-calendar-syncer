@@ -24,8 +24,9 @@ describe('Init Script', () => {
   });
 
   test('should handle errors during database initialization', async () => {
+    const error = new Error('Initialization error');
     connectDB.mockImplementation(() => {
-      throw new Error('Initialization error');
+      throw error;
     });
     closeDB.mockImplementation(() => {});
 
