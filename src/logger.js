@@ -9,6 +9,11 @@ const logFileName = process.env.LOG_FILE || 'syncer.log';
 const logFile = fs.createWriteStream(logFileName, { flags: 'a' });
 const logStdout = process.stdout;
 
+function info(message) {
+  logFile.write('INFO: ' + message + '\n');
+  logStdout.write('INFO: ' + message + '\n');
+}
+
 function log(message) {
   logFile.write(message + '\n');
   logStdout.write(message + '\n');
@@ -24,6 +29,7 @@ function end(callback) {
 }
 
 module.exports = {
+  info,
   log,
   error,
   end,

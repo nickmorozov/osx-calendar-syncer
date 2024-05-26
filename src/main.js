@@ -120,7 +120,11 @@ async function main() {
 }
 
 if (require.main === module) {
-  main();
+  main()
+    .then(() => logger.log('Syncer finished.'))
+    .catch((reason) => {
+      logger.error(`Error syncing item: ${reason}`);
+    });
 }
 
 module.exports = main;
