@@ -17,8 +17,8 @@ module.exports = {
     Corrao: '🖥 ',
   },
   listsByTarget: {
-    Nick: ['Ideas', 'Projects', 'Software', 'Health', 'Work'],
-    Family: ['Groceries', 'Home', 'Shopping', 'Renovations'],
+    Nick: ['Reminders', 'Work'],
+    Family: ['Home', 'Groceries', 'Shopping'],
   },
   sources: {
     personalSources: ['Nick', 'Counselling', 'Massage'],
@@ -28,6 +28,6 @@ module.exports = {
   targetKeysBySources: {
     personalSources: ['Nick'],
     familySources: ['Family'],
-    workSources: ['Nick'],
+    workSources: ['Work'],
   },
 };
