@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 
+const { Worker } = require('worker_threads');
 const { connectDB, closeDB } = require('./db');
-const { findEvents, findReminders } = require('./finder');
-const { syncItem } = require('./syncer');
-const config = require('./config');
 const logger = require('./logger');
+const config = require('./config');
+const { syncItem } = require('./syncer');
+require('dotenv').config();
+
+const WORKER_COUNT = parseInt(process.env.WORKER_COUNT, 10) || 4;
+const PERIOD_HOURS = 6; // Each worker handles a 6-hour period
 
 async function main() {
   logger.log('Starting syncer...');
@@ -12,49 +16,111 @@ async function main() {
   connectDB();
 
   // Calculate date range
-  const startDate = new Date(Date.now() + config.dateRange.startOffset).toISOString().split('T')[0];
-  const endDate = new Date(Date.now() + config.dateRange.endOffset).toISOString().split('T')[0];
+  const startDate = new Date(Date.now() + config.dateRange.startOffset);
+  const endDate = new Date(Date.now() + config.dateRange.endOffset);
 
-  try {
-    logger.log(`Fetching events and reminders from ${startDate} to ${endDate}...`);
-    const events = await findEvents(startDate, endDate);
-    const reminders = await findReminders(startDate, endDate);
+  logger.log(`Calculated date range: ${startDate} to ${endDate}`);
 
-    logger.log(`Found ${events.length} events and ${reminders.length} reminders.`);
+  const workers = [];
+  const results = [];
 
-    // Logic to sync events and reminders
-    for (const event of events) {
-      try {
-        const result = await syncItem(event, 'event');
-        logger.log(`Synced event: ${result}`);
-      } catch (err) {
-        logger.error(`Error syncing event: ${err.message}`);
-      }
-    }
+  for (let i = 0; i < WORKER_COUNT; i++) {
+    workers.push({ isBusy: false });
+  }
 
-    for (const reminder of reminders) {
-      try {
-        const result = await syncItem(reminder, 'reminder');
-        logger.log(`Synced reminder: ${result}`);
-      } catch (err) {
-        logger.error(`Error syncing reminder: ${err.message}`);
-      }
-    }
-  } catch (err) {
-    logger.error(`Error during sync process: ${err.message}`);
-  } finally {
-    closeDB();
-    logger.log('Syncer finished.');
+  const currentStartDate = new Date(startDate);
 
-    // Ensure logs are flushed before exiting
-    logger.end(() => {
-      process.exit(0);
+  function createWorker(startDate, endDate) {
+    return new Promise((resolve, reject) => {
+      const worker = new Worker('./src/finderWorker.js', {
+        workerData: { startDate: startDate.toISOString(), endDate: endDate.toISOString() },
+      });
+
+      worker.on('message', (message) => {
+        if (message.error) {
+          logger.error(`Error fetching period from ${message.startDate} to ${message.endDate}: ${message.error}`);
+          reject(new Error(message.error));
+        } else {
+          logger.log(`Fetched period from ${message.startDate} to ${message.endDate}: ${message.events.length} events, ${message.reminders.length} reminders`);
+          results.push(...message.events, ...message.reminders);
+          resolve();
+        }
+      });
+
+      worker.on('error', reject);
+      worker.on('exit', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Worker stopped with exit code ${code}`));
+        }
+      });
     });
   }
+
+  async function processPeriods() {
+    while (currentStartDate < endDate) {
+      const worker = workers.find((w) => !w.isBusy);
+      if (!worker) {
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Wait for a worker to become available
+        continue;
+      }
+
+      const nextStartDate = new Date(currentStartDate);
+      const nextEndDate = new Date(nextStartDate);
+      nextEndDate.setHours(nextEndDate.getHours() + PERIOD_HOURS);
+
+      if (nextEndDate > endDate) {
+        nextEndDate.setTime(endDate.getTime());
+      }
+
+      worker.isBusy = true;
+      createWorker(nextStartDate, nextEndDate)
+        .then(() => (worker.isBusy = false))
+        .catch((err) => {
+          logger.error(`Worker error: ${err.message}`);
+          worker.isBusy = false;
+        });
+
+      currentStartDate.setHours(currentStartDate.getHours() + PERIOD_HOURS);
+    }
+  }
+
+  await processPeriods();
+
+  // Wait for all workers to finish
+  await Promise.all(
+    workers.map((worker) => {
+      return new Promise((resolve) => {
+        const interval = setInterval(() => {
+          if (!worker.isBusy) {
+            clearInterval(interval);
+            resolve();
+          }
+        }, 100);
+      });
+    })
+  );
+
+  // Sync results
+  for (const item of results) {
+    try {
+      const result = await syncItem(item, item.type);
+      logger.log(`Synced item: ${result}`);
+    } catch (err) {
+      logger.error(`Error syncing item: ${err.message}`);
+    }
+  }
+
+  closeDB();
+  logger.log('Syncer finished.');
+
+  // Ensure logs are flushed before exiting
+  logger.end(() => {
+    process.exit(0);
+  });
 }
 
-main()
-  .then(() => logger.log('Syncer exiting...'))
-  .catch((reason) => logger.error(reason));
+if (require.main === module) {
+  main();
+}
 
 module.exports = main;
