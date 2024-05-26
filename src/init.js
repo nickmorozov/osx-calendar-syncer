@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 
 const { connectDB, closeDB } = require('./db');
-require('dotenv').config(); // Load environment variables
-const process = require('process');
 const logger = require('./logger');
 
 async function init() {
   logger.log('Initializing database...');
 
-  connectDB();
+  const db = connectDB();
 
   try {
     // Your database initialization logic here
@@ -26,6 +24,10 @@ async function init() {
   }
 }
 
-init()
-  .then(() => logger.log('Initialization exiting...'))
-  .catch((reason) => logger.error(reason));
+if (require.main === module) {
+  init()
+    .then(() => logger.log('Initialization exiting...'))
+    .catch((reason) => logger.error(reason));
+}
+
+module.exports = init;

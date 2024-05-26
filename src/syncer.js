@@ -1,52 +1,39 @@
 const osascript = require('osascript');
 
 /**
- * Finds events/reminders not in the database.
- * @param {string} startDate - The start date to query for events/reminders.
- * @param {string} endDate - The end date to query for events/reminders.
- * @returns {Promise<Array>} - A promise that resolves to the found events/reminders.
+ * Syncs an item to a target calendar.
+ * @param {Object} item - The item to sync.
+ * @param {string} type - The type of item ('event' or 'reminder').
+ * @returns {Promise<string>} - The result of the sync.
  */
-function findEvents(startDate, endDate) {
-  return new Promise((resolve, reject) => {
-    osascript(
-      `
-        log "Finding events from ${startDate} to ${endDate}"
-        tell application "Calendar"
-          set eventsList to (get properties of (every event where start date is greater than or equal to date "${startDate}" and end date is less than or equal to date "${endDate}"))
-        end tell
-        return eventsList
-        `,
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
-      }
-    );
-  });
-}
+function syncItem(item, type) {
+  const properties = {
+    summary: item.title,
+    start_date: item.start,
+    end_date: item.end,
+    notes: item.notes,
+    is_all_day: item.allday,
+    canceled: item.canceled,
+  };
 
-function findReminders(startDate, endDate) {
-  return new Promise((resolve, reject) => {
-    osascript(
-      `
-       log "Finding reminders from ${startDate} to ${endDate}"
-        tell application "Reminders"
-          set remindersList to (get properties of (every reminder where due date is greater than or equal to date "${startDate}" and due date is less than or equal to date "${endDate}"))
+  const script = `
+        tell application "${type === 'event' ? 'Calendar' : 'Reminders'}"
+            tell calendar "${item.calendar}"
+                make new ${type} with properties ${JSON.stringify(properties)}
+            end tell
         end tell
-        return remindersList
-        `,
-      (err, result) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(result);
+    `;
+
+  return new Promise((resolve, reject) => {
+    osascript(script, (err, result) => {
+      if (err) {
+        return reject(err);
       }
-    );
+      resolve(result);
+    });
   });
 }
 
 module.exports = {
-  findEvents,
-  findReminders,
+  syncItem,
 };

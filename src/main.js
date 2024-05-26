@@ -4,7 +4,6 @@ const { connectDB, closeDB } = require('./db');
 const { findEvents, findReminders } = require('./finder');
 const { syncItem } = require('./syncer');
 const config = require('./config');
-const process = require('process');
 const logger = require('./logger');
 
 async function main() {
@@ -23,6 +22,7 @@ async function main() {
 
     logger.log(`Found ${events.length} events and ${reminders.length} reminders.`);
 
+    // Logic to sync events and reminders
     for (const event of events) {
       try {
         const result = await syncItem(event, 'event');

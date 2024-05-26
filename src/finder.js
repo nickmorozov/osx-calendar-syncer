@@ -1,19 +1,18 @@
 const osascript = require('osascript');
 
 /**
- * Finds events/reminders not in the database.
- * @param {string} date - The date to query for events/reminders.
- * @returns {Promise<Array>} - A promise that resolves to the found events/reminders.
+ * Finds events within a date range.
+ * @param {string} startDate - The start date.
+ * @param {string} endDate - The end date.
+ * @returns {Promise<Array>} - The events found.
  */
-function findEvents(date) {
+function findEvents(startDate, endDate) {
   return new Promise((resolve, reject) => {
     osascript(
       `
-        log "Finding events on date: " & ${date}
-        tell application "Calendar"
-          set eventsList to (get properties of (every event where start date is in {${date}}))
-        end tell
-        return eventsList
+            tell application "Calendar"
+                set eventsList to (get properties of (every event where start date is greater than or equal to date "${startDate}" and end date is less than or equal to date "${endDate}"))
+            end tell
         `,
       (err, result) => {
         if (err) {
@@ -25,15 +24,19 @@ function findEvents(date) {
   });
 }
 
-function findReminders(date) {
+/**
+ * Finds reminders within a date range.
+ * @param {string} startDate - The start date.
+ * @param {string} endDate - The end date.
+ * @returns {Promise<Array>} - The reminders found.
+ */
+function findReminders(startDate, endDate) {
   return new Promise((resolve, reject) => {
     osascript(
       `
-        log "Finding reminders on date: " & ${date}
-        tell application "Reminders"
-          set remindersList to (get properties of (every reminder where due date is in {${date}}))
-        end tell
-        return remindersList
+            tell application "Reminders"
+                set remindersList to (get properties of (every reminder where due date is greater than or equal to date "${startDate}" and due date is less than or equal to date "${endDate}"))
+            end tell
         `,
       (err, result) => {
         if (err) {
