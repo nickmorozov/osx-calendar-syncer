@@ -3,9 +3,6 @@
     "node": true,
     "es6": true
   },
-  "plugins": [
-    "prettier"
-  ],
   "extends": [
     "eslint:recommended",
     "plugin:prettier/recommended"
@@ -19,12 +16,39 @@
     ".idea/"
   ],
   "noInlineConfig": false,
-  "overrides": [],
+  "overrides": [
+    {
+      "env": {
+        "jest": true,
+        "jest/globals": true
+      },
+      "files": [
+        "test/**"
+      ],
+      "plugins": [
+        "jest"
+      ],
+      "extends": [
+        "plugin:jest/recommended"
+      ],
+      "rules": {
+        "jest/prefer-expect-assertions": "off",
+        "jest/no-disabled-tests": "warn",
+        "jest/no-focused-tests": "error",
+        "jest/no-identical-title": "error",
+        "jest/prefer-to-have-length": "warn",
+        "jest/valid-expect": "error"
+      }
+    }
+  ],
   "parser": "",
   "parserOptions": {
-    "ecmaVersion": 2018,
+    "ecmaVersion": 2020,
     "sourceType": "module"
   },
+  "plugins": [
+    "prettier"
+  ],
   "root": false,
   "rules": {
     "semi": "error",

@@ -10,10 +10,11 @@
     "sqlite3": "latest"
   },
   "scripts": {
-    "lint": "eslint src",
+    "lint": "eslint src test",
     "prebuild": "touch syncer.log && chmod 666 syncer.log",
     "build": "node src/init.js",
     "start": "node src/main.js",
+    "test": "jest",
     "prettier": "prettier --write 'src/**/*.{js,ts,json}'",
     "prettier:verify": "prettier --list-different 'src/**/*.{js,ts,json}'",
     "postinstall": "husky install",
@@ -25,11 +26,14 @@
     ]
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "eslint": "latest",
     "eslint-config-prettier": "latest",
     "eslint-plugin-import": "latest",
+    "eslint-plugin-jest": "^28.5.0",
     "eslint-plugin-prettier": "latest",
     "husky": "latest",
+    "jest": "^29.7.0",
     "lint-staged": "latest",
     "prettier": "latest",
     "prettier-eslint": "latest",
