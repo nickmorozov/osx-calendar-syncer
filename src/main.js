@@ -7,8 +7,8 @@ const config = require('./config');
 const { syncItem } = require('./syncer');
 require('dotenv').config();
 
-const WORKER_COUNT = parseInt(process.env.WORKER_COUNT, 10) || 4;
-const PERIOD_HOURS = 6; // Each worker handles a 6-hour period
+const WORKER_COUNT = parseInt(process.env.WORKER_COUNT, 10) || 4; // Number of workers
+const PERIOD_HOURS = parseInt(process.env.WORKER_HOURS, 10) || 6; // Each worker handles a 6-hour period
 
 async function main() {
   logger.log('Starting syncer...');

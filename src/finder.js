@@ -20,13 +20,15 @@ function formatDateForAppleScript(dateString) {
   return `date "${appleScriptDate}"`;
 }
 
+const _timeout = parseInt(process.env.WORKER_TIMEOUT, 10) || 60;
+
 /**
  * Executes an AppleScript command with a timeout.
  * @param {string} script - The AppleScript command to execute.
  * @param {number} timeout - The timeout in milliseconds.
  * @returns {Promise<string>} - The result of the execution.
  */
-function executeWithTimeout(script, timeout = 120000) {
+function executeWithTimeout(script, timeout = _timeout * 1000) {
   // Increased timeout to 120 seconds
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
